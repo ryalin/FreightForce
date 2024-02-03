@@ -1,4 +1,3 @@
-
 html, body, #viewDiv {
   padding: 0;
   margin: 0;
@@ -6,7 +5,7 @@ html, body, #viewDiv {
   width: 100%;
 }
 
-#source_address, #destination_address, #freight_type, #deadline {
+#source_address, #destination_address, #freight_type {
   width: 14vw;
   height: 3vh;
   margin: 0.5vh;
@@ -14,17 +13,14 @@ html, body, #viewDiv {
   border: 0px;
   box-shadow: 1px 1px 1px #6e6e6e4d;
   font-size: 12px;
-  /* display: inline-block; */
 }
 
 #source_address, #freight_type {
-  margin-top: 2vh;
+  margin-top: 3vh;
 }
 
 #submit {
-  position: absolute;
-  bottom: 2vh;
-  right: calc(10px + 2vmin);
+  margin-left: 1.2vw;
   border: 0px;
   width: 8vw;
   height: 3vh;
@@ -60,22 +56,15 @@ html, body, #viewDiv {
   background-color: #f8f8f8;
   padding: 2vmin;
   margin: 4px;
-  /* font-family: 'Trebuchet MS', sans-serif; */
-  /* color:#d4d5d6; */
   font-size: 14px;
   font-weight: bold;
   border-bottom: 1px solid #6e6e6e4d;
   color: #323232;
-  /* margin: 0 0 0.5rem; */
   font-weight: 600;
   font-family: Avenir Next,Helvetica Neue,helvetica,arial,sans-serif;
   line-height: 1.3em;
   box-shadow: 1px 1px 1px #6e6e6e4d;
 }
-/* 
-.routeInput:hover {
-  background-color: rgba(84, 84, 84, 0.9);
-} */
 
 #pastSearchesContainer{
   position: absolute;
@@ -86,26 +75,17 @@ html, body, #viewDiv {
   height: calc(60vh - 5vmin);
   background-color: #f8f8f8;
   padding: 2vmin;
-  /* padding-top: 1vh;
-  padding-bottom: 1vh; */
   margin: 4px;
-  /* font-family: 'Trebuchet MS', sans-serif; */
-  /* color:#d4d5d6; */
   font-size: 14px;
-  /* font-weight: bold; */
   overflow: auto;
   border-bottom: 1px solid #6e6e6e4d;
   color: #323232;
-  /* margin: 0 0 0.5rem; */
   font-weight: 600;
   font-family: Avenir Next,Helvetica Neue,helvetica,arial,sans-serif;
   line-height: 1.3em;
   box-shadow: 1px 1px 1px #6e6e6e4d;
 }
 
-/* #pastSearchesContainer:hover {
-  background-color: rgba(84, 84, 84, 0.9);
-} */
 
 .pac-container {
   z-index: 10000;
@@ -136,18 +116,13 @@ html, body, #viewDiv {
   width: 18vw;
   font-size: 12px;
   font-weight: normal;
-  /* background: white; */
-  /* background-color: rgba(163, 163, 163, 0.9); */
   background-color: #f8f8f8;
   padding: 1vmin;
-  /* border-bottom: 1px solid #6e6e6e4d; */
-  /* border: 1px solid #6e6e6e4d; */
   box-shadow: 1px 1px 1px #6e6e6e4d;
 }
 
 .trips:hover {
   background-color: rgba(176, 176, 176);
-  /* height: 3.5vw; */
 }
 
 #popup {
@@ -170,7 +145,27 @@ html, body, #viewDiv {
   margin-top: 15px;
 }
 
+#box {
+  height: auto; 
+  max-width: 8%;
+  margin-left: 10px;
+  margin-top: 15px;
+}
+
 .wrapper {
   display: flex;
   align-items: center;
+}
+
+.bottomInputs {
+  margin-top: 6vh;
+  margin-left: 1vw;
+}
+
+#deadline {
+  border: 0px;
+  box-shadow: 1px 1px 1px #6e6e6e4d;
+  font-size: 12px;
+  height: 3vh;
+  width: 7vw;
 }

@@ -27,11 +27,12 @@
         <div class="wrapper"><img id="dest" class="img" src="../static/red-map-localization-icon-5.png">
         <input type="text" id="destination_address" name="destination_address" placeholder="Choose Destination" required></div>
 
-        <input type="text" id="freight_type" name="freight_type" placeholder="Enter freight type" required><br >
+        <div class="wrapper"><img id="box" class="img" src="../static/box.png">
+        <input type="text" id="freight_type" name="freight_type" placeholder="Enter freight" required></div>
 
-        <input type="date" id="deadline" name="deadline" placeholder="Enter delivery deadline" min="2024-01-01" max="2028-01-01" required><br>
-
-        <input type="submit" id="submit" value="Submit Route">
+        <div class="wrapper"><div class="bottomInputs">
+        <input type="date" id="deadline" name="deadline" placeholder="Enter delivery deadline" min="2024-01-01" max="2028-01-01" required>
+        <input type="submit" id="submit" value="Submit Route"></div></div>
       </form>
 
     </div>
@@ -40,11 +41,8 @@
 
     <div id="pastSearchesContainer">Current Routes
         <ul id="pastSearchesList"></ul>
-        <form id="allRoutes">
-          <input type="submit" id="get_all_routes" value="View Active Routes">
-        </form>
-        
     </div>
+
     <div id="popup" style="display: none;"></div>
 
     <div id="viewDiv"></div>
@@ -69,7 +67,7 @@
   
       ], function(esriConfig, Map, MapView, 
                   Graphic, GraphicsLayer, route, 
-                  RouteParameters, FeatureSet, locator,FeatureLayer,Legend, Units, MapImageLayer) {
+                  RouteParameters, FeatureSet, locator, FeatureLayer,Legend, Units, MapImageLayer) {
 
   
       esriConfig.apiKey = "AAPK7d9198b324c34382b89c6e1485af7a6feZL-WzCqfZjOlsuoTNJ7kCBMlRAaoAnOCgA0I33as1UJjUfgPNOkmdKCmIvwxNrg";
@@ -77,9 +75,6 @@
       const map = new Map({
         basemap: "arcgis/navigation" // basemap styles service
       });
-
-      // var dynamicLayer = new ArcGISDynamicMapServiceLayer("http://traffic.arcgis.com/arcgis/rest/services/World/Traffic/MapServer");
-      // map.addLayer(dynamicLayer);
   
       const view = new MapView({
         container: "viewDiv",
@@ -92,13 +87,11 @@
       });
 
       var featureLayerUrl = "https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/NWS_Watches_Warnings_v1/FeatureServer/9";
-
       var featureLayerUrl2 = "https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/NWS_Watches_Warnings_v1/FeatureServer/8";
       
       const popupOpenspaces = {
         "title": "Severe Weather",
       }
-
 
       // Create the feature layer
       var featureLayer = new FeatureLayer({
@@ -124,12 +117,7 @@
       featureLayer.opacity = 0.8; 
 
       // Add the feature layer to the map
-      map.add(featureLayer,9);
-
-      // Add the feature layer to the map
-      //map.add(featureLayer2,8);
-
-      
+      map.add(featureLayer,9);      
       map.add(trafficLayer);
 
       var layersArray = [featureLayer,trafficLayer];
@@ -152,7 +140,6 @@
           }
         ]
       });
-
       // Add the legend widget to the bottom-right corner of the view
       view.ui.add(legend, "bottom-left");
 
@@ -190,57 +177,6 @@
         ];
       }, 300000);
 
-      const polygonBarriers = [{
-        geometry: {
-          rings: [
-            [-80, 40], //Longitude, latitude
-            [-80, 42], //Longitude, latitude
-            [-82, 42],   //Longitude, latitude
-            [-82, 40], //Longitude, latitude
-          ]
-        },
-        attributes: {
-          Name: "Flood zone",
-          BarrierType: 0 // Restriction barrier type
-        }
-      }]
-
-      const polygon = {
-        type: "polygon",
-        rings: [
-          [-80, 40], //Longitude, latitude
-          [-80, 42], //Longitude, latitude
-          [-82, 42],   //Longitude, latitude
-          [-82, 40], //Longitude, latitude
-        ]
-      };
-
-      const simpleFillSymbol = {
-          type: "simple-fill",
-          color: [227, 139, 79, 0.8],  // Orange, opacity 80%
-          outline: {
-            color: [255, 255, 255],
-            width: 1
-          }
-      };
-
-      const polygonGraphic = new Graphic({
-          // geometry: {
-            rings: [
-              [-80, 40], //Longitude, latitude
-              [-80, 42], //Longitude, latitude
-              [-82, 42],   //Longitude, latitude
-              [-82, 40], //Longitude, latitude
-            ]
-          // },
-          // symbol: simpleFillSymbol,
-          // attributes: {
-            // Name: "Storm",
-            // BarrierType: 0}
-      });
-  
-      graphicsLayer.add(polygonGraphic);
-
       const routeUrl = "https://route-api.arcgis.com/arcgis/rest/services/World/Route/NAServer/Route_World";
       const geocodingServiceUrl = "https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer";
   
@@ -262,9 +198,9 @@
         return string.replace(reg, (match)=>(map[match]));
       }
 
-      function saveFormData(source, dest, freight, deadline, coord1, coord2, coordIdx) {
+      function saveFormData(source, dest, freight, deadline, coordIdx) {
         let formData = JSON.parse(localStorage.getItem('formData')) || [];
-        formData.push({ source: source, dest: dest, freight: freight, deadline: deadline, coord1: coord1, coord2: coord2, coordIdx: coordIdx});
+        formData.push({ source: source, dest: dest, freight: freight, deadline: deadline, coordIdx: coordIdx});
         localStorage.setItem('formData', JSON.stringify(formData));
       }
 
@@ -343,49 +279,42 @@
             view.graphics.add(graphicDest);
 
             let coordIdx = coords.length;
-            saveFormData(source_address, destination_address, freight, deadline,
-              resultsArray[0][0].location,
-              resultsArray[1][0].location,
-              coordIdx);
+            saveFormData(source_address, destination_address, freight, deadline, coordIdx);
             coords.push([resultsArray[0][0].location, resultsArray[1][0].location])
             displayPastResults();
   
             getRoute();
           })
       });
+  
+      function getRoute() {
+        const routeParams = new RouteParameters({
+          stops: new FeatureSet({
+            features: view.graphics.toArray()
+          }),
+          returnDirections: true,
+          outSpatialReference: {
+            wkid: 102100
+          },
+          impedanceAttributeName: "TruckTravelTime",
+          restrictionAttributeNames:[ "Avoid Truck Restricted Roads", "Driving a Truck", "Use Preferred Truck Routes"],
+        });
 
-        function getRoute() {
-          const routeParams = new RouteParameters({
-            stops: new FeatureSet({
-              features: view.graphics.toArray()
-            }),
-            returnDirections: true,
-            outSpatialReference: {
-              wkid: 102100
-            },
-            impedanceAttributeName: "TruckTravelTime",
-            restrictionAttributeNames:[ "Avoid Truck Restricted Roads", "Driving a Truck", "Use Preferred Truck Routes"],
-            polygon_barriers: {
-              features: [polygonGraphic]
-            }
-          });
-
-          route.solve(routeUrl, routeParams)
-            .then(function (data) {
-              data.routeResults.forEach(function (result) {
-                result.route.symbol = {
-                  type: "simple-line",
-                  color: [5, 150, 255],
-                  width: 3
-                };
-                view.graphics.add(result.route);
-              });
-            })
-            .catch(function (error) {
-              console.error("Error solving route:", error);
+        route.solve(routeUrl, routeParams)
+          .then(function (data) {
+            data.routeResults.forEach(function (result) {
+              result.route.symbol = {
+                type: "simple-line",
+                color: [5, 150, 255],
+                width: 3
+              };
+              view.graphics.add(result.route);
             });
+          })
+          .catch(function (error) {
+            console.error("Error solving route:", error);
+          });
         }
-       
       });
   
       // Autocomplete for source address
