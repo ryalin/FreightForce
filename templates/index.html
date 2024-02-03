@@ -51,8 +51,6 @@
     
     <script>
       require([
-        // "dojo/dom",
-        // "dojo/domReady!",
         "esri/config",
         "esri/Map",
         "esri/views/MapView",
@@ -67,25 +65,12 @@
         "esri/widgets/Legend",
         "esri/core/units",
         "esri/layers/MapImageLayer",
-        
-       
-        // "esri/layers/OpenWeatherMapLayer"
-        // "esri/layers/ArcGISDynamicMapServiceLayer",
-        // "esri/urlUtils",
-        // "dojo/dom", 
-        // "dojo/on", 
-        // "dojo/_base/array", 
-        // "dojo/domReady!"
 
   
       ], function(esriConfig, Map, MapView, 
                   Graphic, GraphicsLayer, route, 
                   RouteParameters, FeatureSet, locator,FeatureLayer,Legend, Units, MapImageLayer) {
 
-      // urlUtils.addProxyRule({
-      //   urlPrefix: "traffic.arcgis.com", 
-      //   proxyUrl: "http://webserver/proxy/proxy.ashx"
-      // });
   
       esriConfig.apiKey = "AAPK7d9198b324c34382b89c6e1485af7a6feZL-WzCqfZjOlsuoTNJ7kCBMlRAaoAnOCgA0I33as1UJjUfgPNOkmdKCmIvwxNrg";
   
@@ -99,8 +84,8 @@
       const view = new MapView({
         container: "viewDiv",
         map: map,
-        center: [-115,40], //Longitude, latitude
-        zoom: 2,
+        center: [-92,40], //Longitude, latitude
+        zoom: 3,
         constraints: {
           minZoom: 2
         },
@@ -114,9 +99,6 @@
         "title": "Severe Weather",
       }
 
-      //const popupOpenspaces2 = {
-      //  "title": "Extreme Weather",
-      // }
 
       // Create the feature layer
       var featureLayer = new FeatureLayer({
@@ -129,9 +111,9 @@
         //popupTemplate: popupOpenspaces2
       });
 
-      const trafficLayer = new MapImageLayer({
+      let trafficLayer = new MapImageLayer({
         url: "https://traffic.arcgis.com/arcgis/rest/services/World/Traffic/MapServer",
-        dpi: 1048,
+        dpi: 48,
         imageFormat: "png32",
         refreshInterval: 3, 
         useViewTime: false,
@@ -174,38 +156,39 @@
       // Add the legend widget to the bottom-right corner of the view
       view.ui.add(legend, "bottom-left");
 
-      
-/*
-      const clock = new Clock({
-        el: "clock", // container div
-        skin: "clock.svg",
-        time: Date.now() // number of milliseconds elapsed since January 1, 1970, 00:00:00 UTC.
-      });
-      clock.on("time-change", setDate);
-
-      view.ui.add(clock, "bottom-left");
-
-      function setDate(time) {
-        // reset the clock widget show the latest traffic data if the user
-        // clicks on `live` button on the clock
-        if (clock.mode === "live") {
-          trafficLayer.timeExtent = null;
-        }
-        else { // otherwise shows the traffic data where
-          // the clock handles move to
-          trafficLayer.timeExtent = {
-            start: time,
-            end: time
-          };
-        }
-      }
-      
-*/
-      // var weatherLayer = new OpenWeatherMapLayer({apikey: "990beb6f0e3652c6b8343e37583774fc"});
-      // map.add(weatherLayer);
-
       const graphicsLayer = new GraphicsLayer();
       map.add(graphicsLayer);
+
+      setInterval(function () {
+        // Remove the feature layer from the map
+        map.removeMany([featureLayer, trafficLayer]);
+
+        // Create a new instance of the feature layer
+        featureLayer = new FeatureLayer({
+          url: featureLayerUrl,
+          popupTemplate: popupOpenspaces
+        });
+
+        trafficLayer = new MapImageLayer({
+          url: "https://traffic.arcgis.com/arcgis/rest/services/World/Traffic/MapServer",
+          dpi: 48,
+          imageFormat: "png32",
+          refreshInterval: 3, 
+          useViewTime: false,
+          visible: true 
+        });
+
+        // Add the new instance of the feature layer to the map
+        map.add(featureLayer, 9);
+        map.add(trafficLayer);
+
+        legend.layerInfos = [
+          {
+            layer: featureLayer,
+            sublayerIds: []
+          }
+        ];
+      }, 300000);
 
       const polygonBarriers = [{
         geometry: {
@@ -286,7 +269,6 @@
       }
 
     function displayPastResults() {
-      console.log("--------------DISPLAY RESULTS--------------")
       let pastResults = JSON.parse(localStorage.getItem('formData')) || [];
       let pastResultsList = document.getElementById('pastSearchesList');
 
@@ -302,6 +284,7 @@
         appendField(li, 'Source', result.source);
         appendField(li, 'Destination', result.dest);
         appendField(li, 'Deadline', result.deadline);
+        appendField(li, 'Freight', result.freight);
 
         // Add click event to trigger getRoute function
         li.addEventListener('click', function() {
@@ -348,9 +331,6 @@
         const source_params = {address: {"address": source_address}}
         const dest_params = {address: {"address": destination_address}}
   
-        // prevQueries.push([source_address, destination_address]);
-        // updatePastSearches(prevQueries);
-  
         Promise.all([
           locator.addressToLocations(geocodingServiceUrl, source_params),
           locator.addressToLocations(geocodingServiceUrl, dest_params),
@@ -359,7 +339,6 @@
             const graphicSource = new Graphic({geometry: resultsArray[0][0].location});
             view.graphics.add(graphicSource);
   
-            console.log(resultsArray[0][0].location);
             const graphicDest = new Graphic({geometry: resultsArray[1][0].location});
             view.graphics.add(graphicDest);
 
@@ -369,70 +348,12 @@
               resultsArray[1][0].location,
               coordIdx);
             coords.push([resultsArray[0][0].location, resultsArray[1][0].location])
-            console.log(coords)
             displayPastResults();
   
             getRoute();
           })
       });
-      /*
-      document.getElementById('allRoutes').addEventListener('get_all_routes', function(event) {
-        event.preventDefault();
-        view.graphics.removeAll();
 
-        //local storage get list of coordinates
-        var coords = localStorage.getItem('formData')
-        print(coords)
-
-        //loop through coordinates and plot on graph
-
-        for(var i=0;i<coords.length;i++){
-          coordinates = coords[JSON.parse(result.coordIdx)]
-          print(coordinates)
-          /*
-          const graphicSource = new Graphic({geometry: coordinates[0]});
-          view.graphics.add(graphicSource);
-
-          const graphicDest = new Graphic({geometry: coordinates[1]});
-          view.graphics.add(graphicDest);
-
-          getRoute();
-
-        }
-      
-      });
-
-      */
-
-      /*
-      function getRoute() {
-        const routeParams = new RouteParameters({
-          stops: new FeatureSet({
-            features: view.graphics.toArray()
-          }),
-          polygon_barriers: {
-            spatialReference: {
-              wkid: 4326,
-            },
-            features: [polygonGraphic]
-          }
-        });
-
-        route.solve(routeUrl, routeParams)
-          .then(function(data) {
-            data.routeResults.forEach(function(result) {
-              result.route.symbol = {
-                type: "simple-line",
-                color: [5, 150, 255],
-                width: 3
-              };
-              view.graphics.add(result.route);
-            });
-          })
-        }
-       */ 
-
-  
         function getRoute() {
           const routeParams = new RouteParameters({
             stops: new FeatureSet({
@@ -442,7 +363,6 @@
             outSpatialReference: {
               wkid: 102100
             },
-            //directionsLengthUnits: Units.KILOMETERS, 
             impedanceAttributeName: "TruckTravelTime",
             restrictionAttributeNames:[ "Avoid Truck Restricted Roads", "Driving a Truck", "Use Preferred Truck Routes"],
             polygon_barriers: {
@@ -467,20 +387,6 @@
         }
        
       });
-     
-      
-      // // Function to update the display of past searches
-      // function updatePastSearches(queries) {
-      //   var pastSearchesList = document.getElementById('pastSearchesList');
-      //   pastSearchesList.innerHTML = ''; // Clear previous list items
-  
-      //   // Add each past search to the list
-      //   queries.forEach(function(search) {
-      //     var listItem = document.createElement('li');
-      //     listItem.textContent = `${search[0]} to ${search[1]}`;
-      //     pastSearchesList.appendChild(listItem);
-      //   });
-      // }
   
       // Autocomplete for source address
       var sourceAutocomplete = new google.maps.places.Autocomplete(document.getElementById('source_address'));
