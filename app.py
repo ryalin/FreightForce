@@ -13,6 +13,32 @@ def index():
     # Pass the API key to the template
     return render_template('index.html', arc_gis=arc_gis)
 
+# @app.route('/route', methods=['POST'])
+# def get_route():
+#     source_address = request.form['source_address']
+#     destination_address = request.form['destination_address']
+
+#     return render_template('fake.html', arc_gis=arc_gis)
+
+# @app.route('/route', methods=['POST'])
+# def get_route():
+#     source_address = request.form['source_address']
+#     destination_address = request.form['destination_address']
+
+#      # Query the Google Maps Directions API to get the route
+#     params = {
+#         'origin': source_address,
+#         'destination': destination_address,
+#         'key': google_api_key
+#     }
+#     response = requests.get('https://maps.googleapis.com/maps/api/directions/json', params=params)
+    
+#     if response.status_code == 200:
+#         route_data = response.json()
+#         return jsonify(route_data)
+#     else:
+#         return jsonify({'error': 'Unable to retrieve route data'})
+
 
 
 # os.getenv('GOOGLEMAPS_API_KEY')

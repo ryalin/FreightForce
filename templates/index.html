@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -23,11 +24,13 @@
       "esri/views/MapView",
 
       "esri/Graphic",
+      "esri/layers/GraphicsLayer",
       "esri/rest/route",
       "esri/rest/support/RouteParameters",
-      "esri/rest/support/FeatureSet"
+      "esri/rest/support/FeatureSet",
+      "esri/rest/locator"
 
-    ], function(esriConfig, Map, MapView, Graphic, route, RouteParameters, FeatureSet) {
+    ], function(esriConfig, Map, MapView, Graphic, GraphicsLayer, route, RouteParameters, FeatureSet, locator) {
 
     esriConfig.apiKey = "AAPK7d9198b324c34382b89c6e1485af7a6feZL-WzCqfZjOlsuoTNJ7kCBMlRAaoAnOCgA0I33as1UJjUfgPNOkmdKCmIvwxNrg";
 
@@ -43,42 +46,47 @@
     });
 
     const routeUrl = "https://route-api.arcgis.com/arcgis/rest/services/World/Route/NAServer/Route_World";
+    const geocodingServiceUrl = "https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer";
 
-    view.on("click", function(event){
 
-      if (view.graphics.length === 0) {
-        addGraphic("origin", event.mapPoint);
-      } else if (view.graphics.length === 1) {
-        addGraphic("destination", event.mapPoint);
+    let prevQueries = [];
 
-        getRoute(); // Call the route service
+    document.getElementById('routeForm').addEventListener('submit', function(event) {
+      event.preventDefault();
 
-      } else {
-        view.graphics.removeAll();
-        addGraphic("origin",event.mapPoint);
-      }
+      view.graphics.removeAll();
+      
+      var source_address = document.getElementById('source_address').value;
+      var destination_address = document.getElementById('destination_address').value;
+      const source_params = {address: {"address": source_address}}
+      const dest_params = {address: {"address": destination_address}}
 
+      prevQueries.push([source_address, destination_address]);
+      
+
+      Promise.all([
+        locator.addressToLocations(geocodingServiceUrl, source_params),
+        locator.addressToLocations(geocodingServiceUrl, dest_params),
+      ])
+        .then((resultsArray) => {
+          const graphicSource = new Graphic({geometry: resultsArray[0][0].location});
+          view.graphics.add(graphicSource);
+
+          const graphicDest = new Graphic({geometry: resultsArray[1][0].location});
+          view.graphics.add(graphicDest);
+
+          getRoute();
+        })
     });
-
-    function addGraphic(type, point) {
-      const graphic = new Graphic({
-        symbol: {
-          type: "simple-marker",
-          color: (type === "origin") ? "white" : "black",
-          size: "8px"
-        },
-        geometry: point
-      });
-      view.graphics.add(graphic);
-    }
 
     function getRoute() {
       const routeParams = new RouteParameters({
         stops: new FeatureSet({
           features: view.graphics.toArray()
         }),
-
       });
+
+      console.log(routeParams.stops.features.length);
 
       route.solve(routeUrl, routeParams)
         .then(function(data) {
@@ -92,8 +100,21 @@
           });
 
         })
-    }
-  });
+      }
+    });
+
+    // // Autocomplete for source address
+    // var sourceAutocomplete = new google.maps.places.Autocomplete(document.getElementById('source_address'));
+    // sourceAutocomplete.addListener('place_changed', function() {
+    //   // Handle selection of source address
+    // });
+
+    // // Autocomplete for destination address
+    // var destinationAutocomplete = new google.maps.places.Autocomplete(document.getElementById('destination_address'));
+    // destinationAutocomplete.addListener('place_changed', function() {
+    //   // Handle selection of destination address
+    // });
+
   </script>
     <div></div>
     <div class="routeInput">
