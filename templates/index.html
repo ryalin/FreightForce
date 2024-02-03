@@ -53,7 +53,8 @@
         "esri/rest/support/FeatureSet",
         "esri/rest/locator",
         "esri/layers/FeatureLayer",
-        "esri/widgets/Legend"
+        "esri/widgets/Legend",
+        "esri/core/units",
         // "esri/layers/OpenWeatherMapLayer"
         // "esri/layers/ArcGISDynamicMapServiceLayer",
         // "esri/urlUtils",
@@ -65,7 +66,7 @@
   
       ], function(esriConfig, Map, MapView, 
                   Graphic, GraphicsLayer, route, 
-                  RouteParameters, FeatureSet, locator,FeatureLayer,Legend) {
+                  RouteParameters, FeatureSet, locator,FeatureLayer,Legend, Units) {
 
       // urlUtils.addProxyRule({
       //   urlPrefix: "traffic.arcgis.com", 
@@ -207,7 +208,7 @@
             pastResultsList.appendChild(li);
         });
       }
-  
+    
       document.getElementById('routeForm').addEventListener('submit', function(event) {
         event.preventDefault();
   
@@ -250,6 +251,7 @@
           })
       });
   
+      /*
       function getRoute() {
         const routeParams = new RouteParameters({
           stops: new FeatureSet({
@@ -273,8 +275,46 @@
             });
           })
         }
-      });
+       */ 
+
   
+        function getRoute() {
+          const routeParams = new RouteParameters({
+            stops: new FeatureSet({
+              features: view.graphics.toArray()
+            }),
+            returnDirections: true,
+            outSpatialReference: {
+              wkid: 102100
+            },
+            //directionsLengthUnits: Units.KILOMETERS, 
+            impedanceAttributeName: "TruckTravelTime",
+            restrictionAttributeNames:[ "Avoid Truck Restricted Roads", "Driving a Truck", "Use Preferred Truck Routes"],
+            polygon_barriers: {
+              features: [polygonGraphic]
+            }
+          });
+
+          route.solve(routeUrl, routeParams)
+            .then(function (data) {
+              data.routeResults.forEach(function (result) {
+                result.route.symbol = {
+                  type: "simple-line",
+                  color: [5, 150, 255],
+                  width: 3
+                };
+                view.graphics.add(result.route);
+              });
+            })
+            .catch(function (error) {
+              console.error("Error solving route:", error);
+            });
+        }
+       
+      });
+     
+
+      
       // // Function to update the display of past searches
       // function updatePastSearches(queries) {
       //   var pastSearchesList = document.getElementById('pastSearchesList');
