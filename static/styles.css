@@ -21,3 +21,13 @@ html, body, #viewDiv {
   background-color: rgba(84, 84, 84, 0.9);
 }
 
+#pastSearchesContainer{
+  position: absolute;
+  z-index: 9999;
+  bottom: 400px;
+  right: 0px;
+  width: 350px;
+  height: 250px;
+  background-color: rgba(106, 68, 68, 0.9);
+  padding: 20px;
+}

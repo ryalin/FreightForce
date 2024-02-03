@@ -11,6 +11,19 @@
       height: 100%;
       width: 100%;
     }
+
+    #pastSearchesContainer {
+      margin-top: 20px;
+    }
+
+    #pastSearchesList {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    #pastSearchesList li {
+      margin-bottom: 5px;
+    }
   </style>
   <link rel="stylesheet" href="static/styles.css">
   <link rel="stylesheet" href="https://js.arcgis.com/4.28/esri/themes/light/main.css">
@@ -62,7 +75,7 @@
       const dest_params = {address: {"address": destination_address}}
 
       prevQueries.push([source_address, destination_address]);
-      
+      updatePastSearches(prevQueries);
 
       Promise.all([
         locator.addressToLocations(geocodingServiceUrl, source_params),
@@ -103,6 +116,19 @@
       }
     });
 
+    // Function to update the display of past searches
+    function updatePastSearches(queries) {
+      var pastSearchesList = document.getElementById('pastSearchesList');
+      pastSearchesList.innerHTML = ''; // Clear previous list items
+
+      // Add each past search to the list
+      queries.forEach(function(search) {
+        var listItem = document.createElement('li');
+        listItem.textContent = `${search[0]} to ${search[1]}`;
+        pastSearchesList.appendChild(listItem);
+      });
+    }
+
     // // Autocomplete for source address
     // var sourceAutocomplete = new google.maps.places.Autocomplete(document.getElementById('source_address'));
     // sourceAutocomplete.addListener('place_changed', function() {
@@ -131,6 +157,11 @@
 
         <input type="submit" value="Get Route">
       </form>
+    </div>
+
+    <div id="pastSearchesContainer">
+        <h2>Past Searches:</h2>
+        <ul id="pastSearchesList"></ul>
     </div>
 
   </head>
