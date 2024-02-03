@@ -18,12 +18,18 @@
   <script src="https://js.arcgis.com/4.28/"></script>
   </head>
   <body>
-    <div class="routeInput">Enter Transport Information
+    <div class="routeInput">Enter Transport
       <form id="routeForm">
-        <input type="text" id="source_address" name="source_address" placeholder="Enter source address" required><br>
-        <input type="text" id="destination_address" name="destination_address" placeholder="Enter destination address" required><br>
+        <div class="wrapper"><img id="source" class="img" src="../static/three-dots-vertical.svg">
+        <input type="text" id="source_address" name="source_address" placeholder="Choose Starting Point" required></div>
+
+        <div class="wrapper"><img id="dest" class="img" src="../static/red-map-localization-icon-5.png">
+        <input type="text" id="destination_address" name="destination_address" placeholder="Choose Destination" required></div>
+
         <input type="text" id="freight_type" name="freight_type" placeholder="Enter freight type" required><br >
+
         <input type="date" id="deadline" name="deadline" placeholder="Enter delivery deadline" min="2024-01-01" max="2028-01-01" required><br>
+
         <input type="submit" id="submit" value="Submit Route">
       </form>
 
@@ -84,8 +90,11 @@
       const view = new MapView({
         container: "viewDiv",
         map: map,
-        center: [-81,41], //Longitude, latitude
-        zoom: 5
+        center: [-115,40], //Longitude, latitude
+        zoom: 2,
+        constraints: {
+          minZoom: 2
+        },
       });
 
       var featureLayerUrl = "https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/NWS_Watches_Warnings_v1/FeatureServer/9";
@@ -133,6 +142,21 @@
       const graphicsLayer = new GraphicsLayer();
       map.add(graphicsLayer);
 
+      const polygonBarriers = [{
+        geometry: {
+          rings: [
+            [-80, 40], //Longitude, latitude
+            [-80, 42], //Longitude, latitude
+            [-82, 42],   //Longitude, latitude
+            [-82, 40], //Longitude, latitude
+          ]
+        },
+        attributes: {
+          Name: "Flood zone",
+          BarrierType: 0 // Restriction barrier type
+        }
+      }]
+
       const polygon = {
         type: "polygon",
         rings: [
@@ -153,9 +177,18 @@
       };
 
       const polygonGraphic = new Graphic({
-          geometry: polygon,
-          symbol: simpleFillSymbol,
-          attributes: {"BarrierType": 0}
+          // geometry: {
+            rings: [
+              [-80, 40], //Longitude, latitude
+              [-80, 42], //Longitude, latitude
+              [-82, 42],   //Longitude, latitude
+              [-82, 40], //Longitude, latitude
+            ]
+          // },
+          // symbol: simpleFillSymbol,
+          // attributes: {
+            // Name: "Storm",
+            // BarrierType: 0}
       });
   
       graphicsLayer.add(polygonGraphic);
@@ -261,6 +294,7 @@
             const graphicSource = new Graphic({geometry: resultsArray[0][0].location});
             view.graphics.add(graphicSource);
   
+            console.log(resultsArray[0][0].location);
             const graphicDest = new Graphic({geometry: resultsArray[1][0].location});
             view.graphics.add(graphicDest);
 
