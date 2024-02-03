@@ -6,12 +6,13 @@ from flask import Flask, render_template, request, jsonify
 # load_dotenv()
 
 app = Flask(__name__)
-arc_gis = "AAPK7d9198b324c34382b89c6e1485af7a6feZL-WzCqfZjOlsuoTNJ7kCBMlRAaoAnOCgA0I33as1UJjUfgPNOkmdKCmIvwxNrg"
+# arc_gis = "AAPK7d9198b324c34382b89c6e1485af7a6feZL-WzCqfZjOlsuoTNJ7kCBMlRAaoAnOCgA0I33as1UJjUfgPNOkmdKCmIvwxNrg"
+google_api = "AIzaSyCvM0RWQaayF8fSgrMZj7_dwIETbHQh2dc"
 
 @app.route('/')
 def index():
     # Pass the API key to the template
-    return render_template('index.html', arc_gis=arc_gis)
+    return render_template('index.html', api_key=google_api)
 
 # @app.route('/route', methods=['POST'])
 # def get_route():

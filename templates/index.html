@@ -11,353 +11,250 @@
       height: 100%;
       width: 100%;
     }
-
-    #pastSearchesContainer {
-      margin-top: 20px;
-    }
-
-    #pastSearchesList {
-      list-style-type: none;
-      padding: 0;
-    }
-
-    #pastSearchesList li {
-      margin-bottom: 5px;
-    }
   </style>
   <link rel="stylesheet" href="static/styles.css">
   <link rel="stylesheet" href="https://js.arcgis.com/4.28/esri/themes/light/main.css">
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCvM0RWQaayF8fSgrMZj7_dwIETbHQh2dc&libraries=places"></script>
   <script src="https://js.arcgis.com/4.28/"></script>
-
-  <script>
-
-    require([
-      "esri/config",
-      "esri/Map",
-      "esri/views/MapView",
-
-      "esri/Graphic",
-      "esri/layers/GraphicsLayer",
-      "esri/rest/route",
-      "esri/rest/support/RouteParameters",
-      "esri/rest/support/FeatureSet",
-      "esri/rest/locator"
-
-    ], function(esriConfig, Map, MapView, Graphic, GraphicsLayer, route, RouteParameters, FeatureSet, locator) {
-
-    esriConfig.apiKey = "AAPK7d9198b324c34382b89c6e1485af7a6feZL-WzCqfZjOlsuoTNJ7kCBMlRAaoAnOCgA0I33as1UJjUfgPNOkmdKCmIvwxNrg";
-
-    const map = new Map({
-      basemap: "arcgis/navigation" // basemap styles service
-    });
-
-    const view = new MapView({
-      container: "viewDiv",
-      map: map,
-      center: [-118.24532,34.05398], //Longitude, latitude
-      zoom: 12
-    });
-
-    const routeUrl = "https://route-api.arcgis.com/arcgis/rest/services/World/Route/NAServer/Route_World";
-    const geocodingServiceUrl = "https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer";
-
-
-    let prevQueries = [];
-
-    document.getElementById('routeForm').addEventListener('submit', function(event) {
-      event.preventDefault();
-
-      view.graphics.removeAll();
-      
-      var source_address = document.getElementById('source_address').value;
-      var destination_address = document.getElementById('destination_address').value;
-      const source_params = {address: {"address": source_address}}
-      const dest_params = {address: {"address": destination_address}}
-
-      prevQueries.push([source_address, destination_address]);
-      updatePastSearches(prevQueries);
-
-      Promise.all([
-        locator.addressToLocations(geocodingServiceUrl, source_params),
-        locator.addressToLocations(geocodingServiceUrl, dest_params),
-      ])
-        .then((resultsArray) => {
-          const graphicSource = new Graphic({geometry: resultsArray[0][0].location});
-          view.graphics.add(graphicSource);
-
-          const graphicDest = new Graphic({geometry: resultsArray[1][0].location});
-          view.graphics.add(graphicDest);
-
-          getRoute();
-        })
-    });
-
-    function getRoute() {
-      const routeParams = new RouteParameters({
-        stops: new FeatureSet({
-          features: view.graphics.toArray()
-        }),
-      });
-
-      console.log(routeParams.stops.features.length);
-
-      route.solve(routeUrl, routeParams)
-        .then(function(data) {
-          data.routeResults.forEach(function(result) {
-            result.route.symbol = {
-              type: "simple-line",
-              color: [5, 150, 255],
-              width: 3
-            };
-            view.graphics.add(result.route);
-          });
-
-        })
-      }
-    });
-
-    // Function to update the display of past searches
-    function updatePastSearches(queries) {
-      var pastSearchesList = document.getElementById('pastSearchesList');
-      pastSearchesList.innerHTML = ''; // Clear previous list items
-
-      // Add each past search to the list
-      queries.forEach(function(search) {
-        var listItem = document.createElement('li');
-        listItem.textContent = `${search[0]} to ${search[1]}`;
-        pastSearchesList.appendChild(listItem);
-      });
-    }
-
-    // // Autocomplete for source address
-    // var sourceAutocomplete = new google.maps.places.Autocomplete(document.getElementById('source_address'));
-    // sourceAutocomplete.addListener('place_changed', function() {
-    //   // Handle selection of source address
-    // });
-
-    // // Autocomplete for destination address
-    // var destinationAutocomplete = new google.maps.places.Autocomplete(document.getElementById('destination_address'));
-    // destinationAutocomplete.addListener('place_changed', function() {
-    //   // Handle selection of destination address
-    // });
-
-  </script>
-    <div></div>
-    <div class="routeInput">
-      <h2>Enter Transport Information</h2>
-      <form id="routeForm">
-        <label for="source_address">Source Address:</label>
-        <input type="text" id="source_address" name="source_address" placeholder="Enter source address"><br>
-        
-        <label for="destination_address">Destination Address:</label>
-        <input type="text" id="destination_address" name="destination_address" placeholder="Enter destination address"><br>
-
-        <label for="freight_type">Freight Type:</label>
-        <input type="text" id="freight_type" name="freight_type" placeholder="Enter freight type"><br>
-
-        <input type="submit" value="Get Route">
-      </form>
-    </div>
-
-    <div id="pastSearchesContainer">
-        <h2>Past Searches:</h2>
-        <ul id="pastSearchesList"></ul>
-    </div>
-
   </head>
   <body>
-    <div id="viewDiv"></div>
-  </body>
-</html>
+    <div class="routeInput">Enter Transport Information
+      <form id="routeForm">
+        <input type="text" id="source_address" name="source_address" placeholder="Enter source address"><br>
+        <input type="text" id="destination_address" name="destination_address" placeholder="Enter destination address"><br>
+        <input type="text" id="freight_type" name="freight_type" placeholder="Enter freight type"><br>
+        <input type="text" id="deadline" name="deadline" placeholder="Enter delivery deadline"><br>
+        <input type="submit" id="submit" value="Submit Route">
+      </form>
 
-
-
-<!-- templates/index.html
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Google Maps Route</title>
-    <script src="https://maps.googleapis.com/maps/api/js?key={{ api_key }}&libraries=places&callback=initMap" async defer></script>
-    <style>
-        #map {
-            height: 600px;
-            width: 50%;
-        }
-    </style>
-    <script>
-        var map;
-        var routePath;
-
-        document.addEventListener('DOMContentLoaded', function() {
-            // Load past searches from storage and populate the dropdown
-            loadPastSearches();
-
-            // Handle form submission to get route
-            document.getElementById('routeForm').addEventListener('submit', function(event) {
-                event.preventDefault();
-                
-                var source_address = document.getElementById('source_address').value;
-                var destination_address = document.getElementById('destination_address').value;
-
-                // Save the current search to storage
-                saveSearch(source_address, destination_address);
-
-                // Your code to get route...
-            });
-
-            // Function to load past searches from storage and populate the dropdown
-            function loadPastSearches() {
-                var pastSearches = JSON.parse(localStorage.getItem('pastSearches')) || [];
-                console.log('Past searches loaded:', pastSearches);
-
-                var selectElement = document.getElementById('past_searches');
-                pastSearches.forEach(function(search) {
-                    var option = document.createElement('option');
-                    option.text = search.source + ' to ' + search.destination;
-                    selectElement.add(option);
-                });
-            }
-
-            // Function to save the current search to storage
-            function saveSearch(source, destination) {
-                var pastSearches = JSON.parse(localStorage.getItem('pastSearches')) || [];
-                pastSearches.push({ source: source, destination: destination });
-                localStorage.setItem('pastSearches', JSON.stringify(pastSearches));
-                console.log('Search saved:', { source: source, destination: destination });
-            }
-
-            // Add event listener to handle selection from the past searches dropdown
-            document.getElementById('past_searches').addEventListener('change', function() {
-                var selectedIndex = this.selectedIndex;
-                if (selectedIndex !== -1) {
-                    var pastSearches = JSON.parse(localStorage.getItem('pastSearches')) || [];
-                    var selectedSearch = pastSearches[selectedIndex - 1]; // Subtract 1 to account for the placeholder option
-                    if (selectedSearch) {
-                        // Set the source and destination addresses based on the selected past search
-                        document.getElementById('source_address').value = selectedSearch.source;
-                        document.getElementById('destination_address').value = selectedSearch.destination;
-                    }
-                }
-            });
-        });
-
-        function initMap() {
-            map = new google.maps.Map(document.getElementById('map'), {
-              zoom: 4,
-              center: { lat: 38, lng: 265 },
-              disableDefaultUI: true,
-              minZoom: 4,
-              restriction: {
-                latLngBounds: {
-                  north: 58,
-                  south: 18,
-                  east: 285,
-                  west: 245,
-                },
-              },
-            });
-
-            // Autocomplete for source address
-            var sourceAutocomplete = new google.maps.places.Autocomplete(document.getElementById('source_address'));
-            sourceAutocomplete.addListener('place_changed', function() {
-                // Handle selection of source address
-            });
-
-            // Autocomplete for destination address
-            var destinationAutocomplete = new google.maps.places.Autocomplete(document.getElementById('destination_address'));
-            destinationAutocomplete.addListener('place_changed', function() {
-                // Handle selection of destination address
-            });
-
-            // Handle form submission to get route
-            document.getElementById('routeForm').addEventListener('submit', function(event) {
-                event.preventDefault();
-                
-                var source_address = document.getElementById('source_address').value;
-                var destination_address = document.getElementById('destination_address').value;
-
-                fetch('/route', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: new URLSearchParams({
-                        'source_address': source_address,
-                        'destination_address': destination_address
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    // Remove existing route if any
-                    if (routePath) {
-                        routePath.setMap(null);
-                    }
-
-                    // Parse route data and draw route on the map
-                    var routeCoordinates = decodePolyline(data.routes[0].overview_polyline.points);
-                    routePath = new google.maps.Polyline({
-                        path: routeCoordinates,
-                        geodesic: true,
-                        strokeColor: '#4DFFDB',
-                        strokeOpacity: 1.0,
-                        strokeWeight: 4
-                    });
-                    routePath.setMap(map);
-                })
-                .catch(error => console.error('Error:', error));
-            });
-
-            // Function to decode polyline points
-            function decodePolyline(encoded) {
-                var points = [];
-                var index = 0, len = encoded.length;
-                var lat = 0, lng = 0;
-
-                while (index < len) {
-                    var b, shift = 0, result = 0;
-                    do {
-                        b = encoded.charCodeAt(index++) - 63;
-                        result |= (b & 0x1f) << shift;
-                        shift += 5;
-                    } while (b >= 0x20);
-                    var dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
-                    lat += dlat;
-
-                    shift = 0;
-                    result = 0;
-                    do {
-                        b = encoded.charCodeAt(index++) - 63;
-                        result |= (b & 0x1f) << shift;
-                        shift += 5;
-                    } while (b >= 0x20);
-                    var dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
-                    lng += dlng;
-
-                    points.push({lat: lat / 1e5, lng: lng / 1e5});
-                }
-                return points;
-            }
-        }
-    </script>
-</head>
-<body>
-    <div>
-        <h2>Enter Source and Destination Addresses</h2>
-        <form id="routeForm">
-            <label for="source_address">Source Address:</label>
-            <input type="text" id="source_address" name="source_address" placeholder="Enter source address"><br><br>
-            
-            <label for="destination_address">Destination Address:</label>
-            <input type="text" id="destination_address" name="destination_address" placeholder="Enter destination address"><br><br>
-            
-            <label for="past_searches">Past Searches:</label>
-            <select id="past_searches"></select><br><br>
-
-            <input type="submit" value="Get Route">
-        </form>
     </div>
 
-    <div id="map"></div>
-</body>
-</html> -->
+    <div id="page_name">FreightForce.</div>
 
+    <div id="pastSearchesContainer">Current Routes
+        <ul id="pastSearchesList"></ul>
+    </div>
+    <div id="popup" style="display: none;"></div>
+
+    <div id="viewDiv"></div>
+
+    <script>
+      require([
+        // "dojo/dom",
+        // "dojo/domReady!",
+        "esri/config",
+        "esri/Map",
+        "esri/views/MapView",
+  
+        "esri/Graphic",
+        "esri/layers/GraphicsLayer",
+        "esri/rest/route",
+        "esri/rest/support/RouteParameters",
+        "esri/rest/support/FeatureSet",
+        "esri/rest/locator",
+        // "esri/layers/OpenWeatherMapLayer"
+        // "esri/layers/ArcGISDynamicMapServiceLayer",
+        // "esri/urlUtils",
+        // "dojo/dom", 
+        // "dojo/on", 
+        // "dojo/_base/array", 
+        // "dojo/domReady!"
+
+  
+      ], function(esriConfig, Map, MapView, 
+                  Graphic, GraphicsLayer, route, 
+                  RouteParameters, FeatureSet, locator) {
+
+      // urlUtils.addProxyRule({
+      //   urlPrefix: "traffic.arcgis.com", 
+      //   proxyUrl: "http://webserver/proxy/proxy.ashx"
+      // });
+  
+      esriConfig.apiKey = "AAPK7d9198b324c34382b89c6e1485af7a6feZL-WzCqfZjOlsuoTNJ7kCBMlRAaoAnOCgA0I33as1UJjUfgPNOkmdKCmIvwxNrg";
+  
+      const map = new Map({
+        basemap: "arcgis/navigation" // basemap styles service
+      });
+
+      // var dynamicLayer = new ArcGISDynamicMapServiceLayer("http://traffic.arcgis.com/arcgis/rest/services/World/Traffic/MapServer");
+      // map.addLayer(dynamicLayer);
+  
+      const view = new MapView({
+        container: "viewDiv",
+        map: map,
+        center: [-81,41], //Longitude, latitude
+        zoom: 5
+      });
+
+      // var weatherLayer = new OpenWeatherMapLayer({apikey: "990beb6f0e3652c6b8343e37583774fc"});
+      // map.add(weatherLayer);
+
+      const graphicsLayer = new GraphicsLayer();
+      map.add(graphicsLayer);
+
+      const polygon = {
+        type: "polygon",
+        rings: [
+          [-80, 40], //Longitude, latitude
+          [-80, 42], //Longitude, latitude
+          [-82, 42],   //Longitude, latitude
+          [-82, 40], //Longitude, latitude
+        ]
+      };
+
+      const simpleFillSymbol = {
+          type: "simple-fill",
+          color: [227, 139, 79, 0.8],  // Orange, opacity 80%
+          outline: {
+            color: [255, 255, 255],
+            width: 1
+          }
+      };
+
+      const polygonGraphic = new Graphic({
+          geometry: polygon,
+          symbol: simpleFillSymbol,
+          attributes: {"BarrierType": 0}
+      });
+      graphicsLayer.add(polygonGraphic);
+
+      const routeUrl = "https://route-api.arcgis.com/arcgis/rest/services/World/Route/NAServer/Route_World";
+      const geocodingServiceUrl = "https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer";
+  
+      // let prevQueries = [];
+
+      displayPastResults();
+
+      function clearFields() {
+        document.getElementById('source_address').value = '';
+        document.getElementById('destination_address').value = '';
+        document.getElementById('freight_type').value = '';
+        document.getElementById('deadline').value = '';
+      }
+
+      function sanitize(string) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#x27;',
+            "/": '&#x2F;',
+        };
+        const reg = /[&<>"'/]/ig;
+        return string.replace(reg, (match)=>(map[match]));
+      }
+
+      function saveFormData(source, dest, freight, deadline, coord1, coord2) {
+        let formData = JSON.parse(localStorage.getItem('formData')) || [];
+        formData.push({ source: source, dest: dest, freight: freight, deadline: deadline, coord1: coord1, coord2: coord2});
+        localStorage.setItem('formData', JSON.stringify(formData));
+      }
+
+      function displayPastResults() {
+        let pastResults = JSON.parse(localStorage.getItem('formData')) || [];
+        let pastResultsList = document.getElementById('pastSearchesList');
+
+        pastResultsList.innerHTML = '';
+        pastResults.forEach(result => {
+            let li = document.createElement('li');
+            li.className = "trips";
+            li.dataset.coord1 = result.coord1;
+            li.dataset.coord2 = result.coord2;
+            li.dataset.freight = result.freight;
+            li.textContent = `${result.deadline}: ${result.source} to ${result.dest}`;
+            pastResultsList.appendChild(li);
+        });
+      }
+  
+      document.getElementById('routeForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+  
+        view.graphics.removeAll();
+        
+        var source_address = sanitize(document.getElementById('source_address').value);
+        var destination_address = sanitize(document.getElementById('destination_address').value);
+        var freight = sanitize(document.getElementById('freight_type').value);
+        var deadline = sanitize(document.getElementById('deadline').value);
+
+        if (!source_address || !destination_address || !freight || !deadline) {
+          clearFields();
+          alert("Please Fill Out All Fields");
+          return;
+        }
+
+        clearFields();
+
+        const source_params = {address: {"address": source_address}}
+        const dest_params = {address: {"address": destination_address}}
+  
+        // prevQueries.push([source_address, destination_address]);
+        // updatePastSearches(prevQueries);
+  
+        Promise.all([
+          locator.addressToLocations(geocodingServiceUrl, source_params),
+          locator.addressToLocations(geocodingServiceUrl, dest_params),
+        ])
+          .then((resultsArray) => {
+            const graphicSource = new Graphic({geometry: resultsArray[0][0].location});
+            view.graphics.add(graphicSource);
+  
+            const graphicDest = new Graphic({geometry: resultsArray[1][0].location});
+            view.graphics.add(graphicDest);
+
+            saveFormData(source_address, destination_address, freight, deadline, resultsArray[0][0].location, resultsArray[1][0].location);
+            displayPastResults();
+  
+            getRoute();
+          })
+      });
+  
+      function getRoute() {
+        const routeParams = new RouteParameters({
+          stops: new FeatureSet({
+            features: view.graphics.toArray()
+          }),
+          polygon_barriers: {
+            features: [polygonGraphic]
+          }
+        });
+        console.log(routeParams);
+    
+        route.solve(routeUrl, routeParams)
+          .then(function(data) {
+            data.routeResults.forEach(function(result) {
+              result.route.symbol = {
+                type: "simple-line",
+                color: [5, 150, 255],
+                width: 3
+              };
+              view.graphics.add(result.route);
+            });
+          })
+        }
+      });
+  
+      // // Function to update the display of past searches
+      // function updatePastSearches(queries) {
+      //   var pastSearchesList = document.getElementById('pastSearchesList');
+      //   pastSearchesList.innerHTML = ''; // Clear previous list items
+  
+      //   // Add each past search to the list
+      //   queries.forEach(function(search) {
+      //     var listItem = document.createElement('li');
+      //     listItem.textContent = `${search[0]} to ${search[1]}`;
+      //     pastSearchesList.appendChild(listItem);
+      //   });
+      // }
+  
+      // Autocomplete for source address
+      var sourceAutocomplete = new google.maps.places.Autocomplete(document.getElementById('source_address'));
+      sourceAutocomplete.addListener('place_changed', function() {});
+  
+      // Autocomplete for destination address
+      var destinationAutocomplete = new google.maps.places.Autocomplete(document.getElementById('destination_address'));
+      destinationAutocomplete.addListener('place_changed', function() {});
+  
+    </script>
+  </body>
+</html>

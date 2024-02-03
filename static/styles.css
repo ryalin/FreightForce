@@ -6,15 +6,37 @@ html, body, #viewDiv {
   width: 100%;
 }
 
+#source_address, #destination_address, #freight_type, #deadline {
+  width: 25vw;
+  height: 3vh;
+  margin: 0.5vh;
+  margin-left: 4vw;
+}
+
+#source_address, #freight_type {
+  margin-top: 3.5vh;
+}
+
+#submit {
+  position: absolute;
+  bottom: 2vh;
+  right: 1.5vw;
+}
+
 .routeInput {
   position: absolute;
-  z-index: 9999;
-  bottom: -40px;
+  z-index: 9998;
+  bottom: 0px;
   right: 0px;
-  width: 400px;
-  height: 300px;
+  width: 30vw;
+  height: calc(40vh - 48px);
   background-color: rgba(50, 50, 50, 0.9);
   padding: 20px;
+  margin: 4px;
+  font-family: 'Trebuchet MS', sans-serif;
+  color:#d4d5d6;
+  font-size: 2.5vmin;
+  font-weight: bold;
 }
 
 .routeInput:hover {
@@ -24,10 +46,65 @@ html, body, #viewDiv {
 #pastSearchesContainer{
   position: absolute;
   z-index: 9999;
-  bottom: 400px;
+  top: 0px;
   right: 0px;
-  width: 350px;
-  height: 250px;
-  background-color: rgba(106, 68, 68, 0.9);
+  width: 30vw;
+  height: calc(60vh - 44px);
+  background-color: rgba(50, 50, 50, 0.9);
   padding: 20px;
+  margin: 4px;
+  font-family: 'Trebuchet MS', sans-serif;
+  color:#d4d5d6;
+  font-size: 2.5vmin;
+  font-weight: bold;
+  overflow: auto;
+}
+
+#pastSearchesContainer:hover {
+  background-color: rgba(84, 84, 84, 0.9);
+}
+
+.pac-container {
+  z-index: 10000;
+}
+
+#pastSearchesList {
+  list-style-type: none;
+  padding: 0;
+}
+
+#pastSearchesList li {
+  margin-bottom: 5px;
+}
+
+#page_name {
+  font-family: 'Trebuchet MS', sans-serif;
+  color:#84a5db;
+  font-size: 6vmin;
+  position: absolute;
+  left: 60px;
+  top: 10px;
+  z-index: 200;
+  font-weight: 900;
+  -webkit-text-stroke: 1px black;
+}
+
+.trips {
+  width: 29vw;
+  font-size: 1.5vmin;
+  background: white;
+  background-color: rgba(163, 163, 163, 0.9);
+  padding: 1vmin;
+}
+
+.trips:hover {
+  background-color: rgba(176, 176, 176, 0.9);
+  height: 3.5vw;
+}
+
+#popup {
+  z-index: 9999;
+  background-color: black;
+  width: 100px;
+  height: 100px;
 }
