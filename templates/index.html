@@ -52,6 +52,8 @@
         "esri/rest/support/RouteParameters",
         "esri/rest/support/FeatureSet",
         "esri/rest/locator",
+        "esri/layers/FeatureLayer",
+        "esri/widgets/Legend"
         // "esri/layers/OpenWeatherMapLayer"
         // "esri/layers/ArcGISDynamicMapServiceLayer",
         // "esri/urlUtils",
@@ -63,7 +65,7 @@
   
       ], function(esriConfig, Map, MapView, 
                   Graphic, GraphicsLayer, route, 
-                  RouteParameters, FeatureSet, locator) {
+                  RouteParameters, FeatureSet, locator,FeatureLayer,Legend) {
 
       // urlUtils.addProxyRule({
       //   urlPrefix: "traffic.arcgis.com", 
@@ -85,6 +87,45 @@
         center: [-81,41], //Longitude, latitude
         zoom: 5
       });
+
+      var featureLayerUrl = "https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/NWS_Watches_Warnings_v1/FeatureServer/9";
+
+      var featureLayerUrl2 = "https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/NWS_Watches_Warnings_v1/FeatureServer/8";
+      
+      //const popupOpenspaces = {
+      //  "title": "Severe Weather",
+      //}
+
+      //const popupOpenspaces2 = {
+      //  "title": "Extreme Weather",
+      // }
+
+      // Create the feature layer
+      var featureLayer = new FeatureLayer({
+        url: featureLayerUrl,
+        //popupTemplate: popupOpenspaces
+      });
+
+      var featureLayer2 = new FeatureLayer({
+        url: featureLayerUrl,
+        //popupTemplate: popupOpenspaces2
+      });
+
+      // Set the opacity of the feature layer (adjust as needed)
+      featureLayer.opacity = 0.5; 
+
+      // Add the feature layer to the map
+      map.add(featureLayer,9);
+
+      // Add the feature layer to the map
+      map.add(featureLayer2,8);
+
+      var legend = new Legend({
+        view: view
+      });
+
+      // Add the legend widget to the bottom-right corner of the view
+      view.ui.add(legend, "bottom-left");
 
       // var weatherLayer = new OpenWeatherMapLayer({apikey: "990beb6f0e3652c6b8343e37583774fc"});
       // map.add(weatherLayer);
