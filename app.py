@@ -8,6 +8,8 @@ from flask import Flask, render_template, request, jsonify
 app = Flask(__name__)
 # arc_gis = "AAPK7d9198b324c34382b89c6e1485af7a6feZL-WzCqfZjOlsuoTNJ7kCBMlRAaoAnOCgA0I33as1UJjUfgPNOkmdKCmIvwxNrg"
 google_api = "AIzaSyCvM0RWQaayF8fSgrMZj7_dwIETbHQh2dc"
+weather = "d0c847f1ef5b5347af2733ec89599b39"
+
 
 @app.route('/')
 def index():
