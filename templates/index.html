@@ -1,0 +1,133 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google Maps Route</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ api_key }}&libraries=places&callback=initMap" async defer></script>
+    <style>
+        #map {
+            height: 600px;
+            width: 50%;
+        }
+    </style>
+    <script>
+        var map;
+        var routePath;
+
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+              zoom: 4,
+              center: { lat: 38, lng: 265 },
+              disableDefaultUI: true,
+              minZoom: 4,
+              restriction: {
+                latLngBounds: {
+                  north: 58,
+                  south: 18,
+                  east: 285,
+                  west: 245,
+                },
+              },
+            });
+
+            // Autocomplete for source address
+            var sourceAutocomplete = new google.maps.places.Autocomplete(document.getElementById('source_address'));
+            sourceAutocomplete.addListener('place_changed', function() {
+                // Handle selection of source address
+            });
+
+            // Autocomplete for destination address
+            var destinationAutocomplete = new google.maps.places.Autocomplete(document.getElementById('destination_address'));
+            destinationAutocomplete.addListener('place_changed', function() {
+                // Handle selection of destination address
+            });
+
+            // Handle form submission to get route
+            document.getElementById('routeForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+                
+                var source_address = document.getElementById('source_address').value;
+                var destination_address = document.getElementById('destination_address').value;
+
+                fetch('/route', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams({
+                        'source_address': source_address,
+                        'destination_address': destination_address
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Remove existing route if any
+                    if (routePath) {
+                        routePath.setMap(null);
+                    }
+
+                    // Parse route data and draw route on the map
+                    var routeCoordinates = decodePolyline(data.routes[0].overview_polyline.points);
+                    routePath = new google.maps.Polyline({
+                        path: routeCoordinates,
+                        geodesic: true,
+                        strokeColor: '#FF0000',
+                        strokeOpacity: 1.0,
+                        strokeWeight: 2
+                    });
+                    routePath.setMap(map);
+                })
+                .catch(error => console.error('Error:', error));
+            });
+
+            // Function to decode polyline points
+            function decodePolyline(encoded) {
+                var points = [];
+                var index = 0, len = encoded.length;
+                var lat = 0, lng = 0;
+
+                while (index < len) {
+                    var b, shift = 0, result = 0;
+                    do {
+                        b = encoded.charCodeAt(index++) - 63;
+                        result |= (b & 0x1f) << shift;
+                        shift += 5;
+                    } while (b >= 0x20);
+                    var dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+                    lat += dlat;
+
+                    shift = 0;
+                    result = 0;
+                    do {
+                        b = encoded.charCodeAt(index++) - 63;
+                        result |= (b & 0x1f) << shift;
+                        shift += 5;
+                    } while (b >= 0x20);
+                    var dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+                    lng += dlng;
+
+                    points.push({lat: lat / 1e5, lng: lng / 1e5});
+                }
+                return points;
+            }
+        }
+    </script>
+</head>
+<body>
+    <div>
+        <h2>Enter Source and Destination Addresses</h2>
+        <form id="routeForm">
+            <label for="source_address">Source Address:</label>
+            <input type="text" id="source_address" name="source_address" placeholder="Enter source address"><br><br>
+            
+            <label for="destination_address">Destination Address:</label>
+            <input type="text" id="destination_address" name="destination_address" placeholder="Enter destination address"><br><br>
+            
+            <input type="submit" value="Get Route">
+        </form>
+    </div>
+
+    <div id="map"></div>
+</body>
+</html>
+
