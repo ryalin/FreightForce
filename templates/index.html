@@ -1,4 +1,126 @@
-<!-- templates/index.html -->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>ArcGIS Maps SDK for JavaScript Tutorials: Find a route and directions</title>
+  <style>
+    html, body, #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+  <link rel="stylesheet" href="static/styles.css">
+  <link rel="stylesheet" href="https://js.arcgis.com/4.28/esri/themes/light/main.css">
+  <script src="https://js.arcgis.com/4.28/"></script>
+
+  <script>
+
+    require([
+      "esri/config",
+      "esri/Map",
+      "esri/views/MapView",
+
+      "esri/Graphic",
+      "esri/rest/route",
+      "esri/rest/support/RouteParameters",
+      "esri/rest/support/FeatureSet"
+
+    ], function(esriConfig, Map, MapView, Graphic, route, RouteParameters, FeatureSet) {
+
+    esriConfig.apiKey = "AAPK7d9198b324c34382b89c6e1485af7a6feZL-WzCqfZjOlsuoTNJ7kCBMlRAaoAnOCgA0I33as1UJjUfgPNOkmdKCmIvwxNrg";
+
+    const map = new Map({
+      basemap: "arcgis/navigation" // basemap styles service
+    });
+
+    const view = new MapView({
+      container: "viewDiv",
+      map: map,
+      center: [-118.24532,34.05398], //Longitude, latitude
+      zoom: 12
+    });
+
+    const routeUrl = "https://route-api.arcgis.com/arcgis/rest/services/World/Route/NAServer/Route_World";
+
+    view.on("click", function(event){
+
+      if (view.graphics.length === 0) {
+        addGraphic("origin", event.mapPoint);
+      } else if (view.graphics.length === 1) {
+        addGraphic("destination", event.mapPoint);
+
+        getRoute(); // Call the route service
+
+      } else {
+        view.graphics.removeAll();
+        addGraphic("origin",event.mapPoint);
+      }
+
+    });
+
+    function addGraphic(type, point) {
+      const graphic = new Graphic({
+        symbol: {
+          type: "simple-marker",
+          color: (type === "origin") ? "white" : "black",
+          size: "8px"
+        },
+        geometry: point
+      });
+      view.graphics.add(graphic);
+    }
+
+    function getRoute() {
+      const routeParams = new RouteParameters({
+        stops: new FeatureSet({
+          features: view.graphics.toArray()
+        }),
+
+      });
+
+      route.solve(routeUrl, routeParams)
+        .then(function(data) {
+          data.routeResults.forEach(function(result) {
+            result.route.symbol = {
+              type: "simple-line",
+              color: [5, 150, 255],
+              width: 3
+            };
+            view.graphics.add(result.route);
+          });
+
+        })
+    }
+  });
+  </script>
+    <div></div>
+    <div class="routeInput">
+      <h2>Enter Transport Information</h2>
+      <form id="routeForm">
+        <label for="source_address">Source Address:</label>
+        <input type="text" id="source_address" name="source_address" placeholder="Enter source address"><br>
+        
+        <label for="destination_address">Destination Address:</label>
+        <input type="text" id="destination_address" name="destination_address" placeholder="Enter destination address"><br>
+
+        <label for="freight_type">Freight Type:</label>
+        <input type="text" id="freight_type" name="freight_type" placeholder="Enter freight type"><br>
+
+        <input type="submit" value="Get Route">
+      </form>
+    </div>
+
+  </head>
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>
+
+
+
+<!-- templates/index.html
 <!DOCTYPE html>
 <html>
 <head>
@@ -13,6 +135,59 @@
     <script>
         var map;
         var routePath;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load past searches from storage and populate the dropdown
+            loadPastSearches();
+
+            // Handle form submission to get route
+            document.getElementById('routeForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+                
+                var source_address = document.getElementById('source_address').value;
+                var destination_address = document.getElementById('destination_address').value;
+
+                // Save the current search to storage
+                saveSearch(source_address, destination_address);
+
+                // Your code to get route...
+            });
+
+            // Function to load past searches from storage and populate the dropdown
+            function loadPastSearches() {
+                var pastSearches = JSON.parse(localStorage.getItem('pastSearches')) || [];
+                console.log('Past searches loaded:', pastSearches);
+
+                var selectElement = document.getElementById('past_searches');
+                pastSearches.forEach(function(search) {
+                    var option = document.createElement('option');
+                    option.text = search.source + ' to ' + search.destination;
+                    selectElement.add(option);
+                });
+            }
+
+            // Function to save the current search to storage
+            function saveSearch(source, destination) {
+                var pastSearches = JSON.parse(localStorage.getItem('pastSearches')) || [];
+                pastSearches.push({ source: source, destination: destination });
+                localStorage.setItem('pastSearches', JSON.stringify(pastSearches));
+                console.log('Search saved:', { source: source, destination: destination });
+            }
+
+            // Add event listener to handle selection from the past searches dropdown
+            document.getElementById('past_searches').addEventListener('change', function() {
+                var selectedIndex = this.selectedIndex;
+                if (selectedIndex !== -1) {
+                    var pastSearches = JSON.parse(localStorage.getItem('pastSearches')) || [];
+                    var selectedSearch = pastSearches[selectedIndex - 1]; // Subtract 1 to account for the placeholder option
+                    if (selectedSearch) {
+                        // Set the source and destination addresses based on the selected past search
+                        document.getElementById('source_address').value = selectedSearch.source;
+                        document.getElementById('destination_address').value = selectedSearch.destination;
+                    }
+                }
+            });
+        });
 
         function initMap() {
             map = new google.maps.Map(document.getElementById('map'), {
@@ -71,9 +246,9 @@
                     routePath = new google.maps.Polyline({
                         path: routeCoordinates,
                         geodesic: true,
-                        strokeColor: '#FF0000',
+                        strokeColor: '#4DFFDB',
                         strokeOpacity: 1.0,
-                        strokeWeight: 2
+                        strokeWeight: 4
                     });
                     routePath.setMap(map);
                 })
@@ -123,11 +298,14 @@
             <label for="destination_address">Destination Address:</label>
             <input type="text" id="destination_address" name="destination_address" placeholder="Enter destination address"><br><br>
             
+            <label for="past_searches">Past Searches:</label>
+            <select id="past_searches"></select><br><br>
+
             <input type="submit" value="Get Route">
         </form>
     </div>
 
     <div id="map"></div>
 </body>
-</html>
+</html> -->
 
