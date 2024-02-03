@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="https://js.arcgis.com/4.28/esri/themes/light/main.css">
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCvM0RWQaayF8fSgrMZj7_dwIETbHQh2dc&libraries=places"></script>
   <script src="https://js.arcgis.com/4.28/"></script>
+  
   </head>
   <body>
     <div class="routeInput">Enter Transport
@@ -39,11 +40,15 @@
 
     <div id="pastSearchesContainer">Current Routes
         <ul id="pastSearchesList"></ul>
+        <form id="allRoutes">
+          <input type="submit" id="get_all_routes" value="View Active Routes">
+        </form>
+        
     </div>
     <div id="popup" style="display: none;"></div>
 
     <div id="viewDiv"></div>
-
+    
     <script>
       require([
         // "dojo/dom",
@@ -61,6 +66,9 @@
         "esri/layers/FeatureLayer",
         "esri/widgets/Legend",
         "esri/core/units",
+        "esri/layers/MapImageLayer",
+        
+       
         // "esri/layers/OpenWeatherMapLayer"
         // "esri/layers/ArcGISDynamicMapServiceLayer",
         // "esri/urlUtils",
@@ -72,7 +80,7 @@
   
       ], function(esriConfig, Map, MapView, 
                   Graphic, GraphicsLayer, route, 
-                  RouteParameters, FeatureSet, locator,FeatureLayer,Legend, Units) {
+                  RouteParameters, FeatureSet, locator,FeatureLayer,Legend, Units, MapImageLayer) {
 
       // urlUtils.addProxyRule({
       //   urlPrefix: "traffic.arcgis.com", 
@@ -102,9 +110,9 @@
 
       var featureLayerUrl2 = "https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/NWS_Watches_Warnings_v1/FeatureServer/8";
       
-      //const popupOpenspaces = {
-      //  "title": "Severe Weather",
-      //}
+      const popupOpenspaces = {
+        "title": "Severe Weather",
+      }
 
       //const popupOpenspaces2 = {
       //  "title": "Extreme Weather",
@@ -113,7 +121,7 @@
       // Create the feature layer
       var featureLayer = new FeatureLayer({
         url: featureLayerUrl,
-        //popupTemplate: popupOpenspaces
+        popupTemplate: popupOpenspaces
       });
 
       var featureLayer2 = new FeatureLayer({
@@ -121,22 +129,78 @@
         //popupTemplate: popupOpenspaces2
       });
 
+      const trafficLayer = new MapImageLayer({
+        url: "https://traffic.arcgis.com/arcgis/rest/services/World/Traffic/MapServer",
+        dpi: 1048,
+        imageFormat: "png32",
+        refreshInterval: 3, 
+        useViewTime: false,
+        visible: true 
+      });
+
       // Set the opacity of the feature layer (adjust as needed)
-      featureLayer.opacity = 0.5; 
+      featureLayer.opacity = 0.8; 
 
       // Add the feature layer to the map
       map.add(featureLayer,9);
 
       // Add the feature layer to the map
-      map.add(featureLayer2,8);
+      //map.add(featureLayer2,8);
+
+      
+      map.add(trafficLayer);
+
+      var layersArray = [featureLayer,trafficLayer];
+
+      // Create an array of layerInfos for the Legend widget
+      var layerInfos = layersArray.map(function (layer) {
+        return {
+          layer: trafficLayer,
+          title: layer.title || "Custom Title" // You can set custom titles for the layers if needed
+          // Add more properties as needed
+        };
+      });
 
       var legend = new Legend({
-        view: view
+        view: view,
+        layerInfos: [
+          {
+            layer: featureLayer,
+            sublayerIds: []
+          }
+        ]
       });
 
       // Add the legend widget to the bottom-right corner of the view
       view.ui.add(legend, "bottom-left");
 
+      
+/*
+      const clock = new Clock({
+        el: "clock", // container div
+        skin: "clock.svg",
+        time: Date.now() // number of milliseconds elapsed since January 1, 1970, 00:00:00 UTC.
+      });
+      clock.on("time-change", setDate);
+
+      view.ui.add(clock, "bottom-left");
+
+      function setDate(time) {
+        // reset the clock widget show the latest traffic data if the user
+        // clicks on `live` button on the clock
+        if (clock.mode === "live") {
+          trafficLayer.timeExtent = null;
+        }
+        else { // otherwise shows the traffic data where
+          // the clock handles move to
+          trafficLayer.timeExtent = {
+            start: time,
+            end: time
+          };
+        }
+      }
+      
+*/
       // var weatherLayer = new OpenWeatherMapLayer({apikey: "990beb6f0e3652c6b8343e37583774fc"});
       // map.add(weatherLayer);
 
@@ -311,7 +375,35 @@
             getRoute();
           })
       });
-  
+      /*
+      document.getElementById('allRoutes').addEventListener('get_all_routes', function(event) {
+        event.preventDefault();
+        view.graphics.removeAll();
+
+        //local storage get list of coordinates
+        var coords = localStorage.getItem('formData')
+        print(coords)
+
+        //loop through coordinates and plot on graph
+
+        for(var i=0;i<coords.length;i++){
+          coordinates = coords[JSON.parse(result.coordIdx)]
+          print(coordinates)
+          /*
+          const graphicSource = new Graphic({geometry: coordinates[0]});
+          view.graphics.add(graphicSource);
+
+          const graphicDest = new Graphic({geometry: coordinates[1]});
+          view.graphics.add(graphicDest);
+
+          getRoute();
+
+        }
+      
+      });
+
+      */
+
       /*
       function getRoute() {
         const routeParams = new RouteParameters({
@@ -376,7 +468,6 @@
        
       });
      
-
       
       // // Function to update the display of past searches
       // function updatePastSearches(queries) {

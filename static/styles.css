@@ -35,6 +35,21 @@ html, body, #viewDiv {
   background-color: rgba(176, 176, 176);
 }
 
+#get_all_routes {
+  position: relative;
+  bottom: 2px;
+  left:auto;
+  right:auto;
+  border: 0px;
+  width: 8vw;
+  height: 3vh;
+  box-shadow: 1px 1px 1px #6e6e6e4d;
+}
+
+#get_all_routes:hover {
+  background-color: rgba(176, 176, 176);
+}
+
 .routeInput {
   position: absolute;
   z-index: 9998;
