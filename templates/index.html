@@ -207,14 +207,13 @@
 
         // Add click event to trigger getRoute function
         li.addEventListener('click', function() {
-          coordinates = coords[parseInt(JSON.parse(result.coordIdx))]
-          console.log("coordinates")
+          coordinates = coords[JSON.parse(result.coordIdx)]
           view.graphics.removeAll();
 
-          const graphicSource = new Graphic({geometry: result.coord1});
+          const graphicSource = new Graphic({geometry: coordinates[0]});
           view.graphics.add(graphicSource);
 
-          const graphicDest = new Graphic({geometry: result.coord2});
+          const graphicDest = new Graphic({geometry: coordinates[1]});
           view.graphics.add(graphicDest);
 
           getRoute();
