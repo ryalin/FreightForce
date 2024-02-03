@@ -52,6 +52,7 @@
         "esri/rest/support/RouteParameters",
         "esri/rest/support/FeatureSet",
         "esri/rest/locator",
+        "esri/layers/FeatureLayer"
         // "esri/layers/OpenWeatherMapLayer"
         // "esri/layers/ArcGISDynamicMapServiceLayer",
         // "esri/urlUtils",
@@ -63,7 +64,7 @@
   
       ], function(esriConfig, Map, MapView, 
                   Graphic, GraphicsLayer, route, 
-                  RouteParameters, FeatureSet, locator) {
+                  RouteParameters, FeatureSet, locator,FeatureLayer) {
 
       // urlUtils.addProxyRule({
       //   urlPrefix: "traffic.arcgis.com", 
@@ -85,6 +86,71 @@
         center: [-81,41], //Longitude, latitude
         zoom: 5
       });
+
+      var featureLayerUrl = "https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/NWS_Watches_Warnings_v1/FeatureServer/9";
+      
+      const popupOpenspaces = {
+        "title": "{PARK_NAME}",
+        "content": [{
+          "type": "fields",
+          "fieldInfos": [
+            {
+              "fieldName": "AGNCY_NAME",
+              "label": "Agency",
+              "isEditable": true,
+              "tooltip": "",
+              "visible": true,
+              "format": null,
+              "stringFieldOption": "text-box"
+            },
+            {
+              "fieldName": "TYPE",
+              "label": "Type",
+              "isEditable": true,
+              "tooltip": "",
+              "visible": true,
+              "format": null,
+              "stringFieldOption": "text-box"
+            },
+            {
+              "fieldName": "ACCESS_TYP",
+              "label": "Access",
+              "isEditable": true,
+              "tooltip": "",
+              "visible": true,
+              "format": null,
+              "stringFieldOption": "text-box"
+            },
+
+            {
+              "fieldName": "GIS_ACRES",
+              "label": "Acres",
+              "isEditable": true,
+              "tooltip": "",
+              "visible": true,
+              "format": {
+                "places": 2,
+                "digitSeparator": true
+              },
+
+              "stringFieldOption": "text-box"
+            }
+          ]
+        }]
+      }
+
+      // Create the feature layer
+      var featureLayer = new FeatureLayer({
+        url: featureLayerUrl,
+        outFields: ["*"],
+        popupTemplate: popupOpenspaces
+      });
+
+      // Set the opacity of the feature layer (adjust as needed)
+      featureLayer.opacity = 0.5; 
+
+      // Add the feature layer to the map
+      map.add(featureLayer,9);
 
       // var weatherLayer = new OpenWeatherMapLayer({apikey: "990beb6f0e3652c6b8343e37583774fc"});
       // map.add(weatherLayer);
