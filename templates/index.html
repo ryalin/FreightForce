@@ -16,14 +16,21 @@
   <link rel="stylesheet" href="https://js.arcgis.com/4.28/esri/themes/light/main.css">
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCvM0RWQaayF8fSgrMZj7_dwIETbHQh2dc&libraries=places"></script>
   <script src="https://js.arcgis.com/4.28/"></script>
+  
   </head>
   <body>
-    <div class="routeInput">Enter Transport Information
+    <div class="routeInput">Enter Transport
       <form id="routeForm">
-        <input type="text" id="source_address" name="source_address" placeholder="Enter source address" required><br>
-        <input type="text" id="destination_address" name="destination_address" placeholder="Enter destination address" required><br>
+        <div class="wrapper"><img id="source" class="img" src="../static/three-dots-vertical.svg">
+        <input type="text" id="source_address" name="source_address" placeholder="Choose Starting Point" required></div>
+
+        <div class="wrapper"><img id="dest" class="img" src="../static/red-map-localization-icon-5.png">
+        <input type="text" id="destination_address" name="destination_address" placeholder="Choose Destination" required></div>
+
         <input type="text" id="freight_type" name="freight_type" placeholder="Enter freight type" required><br >
+
         <input type="date" id="deadline" name="deadline" placeholder="Enter delivery deadline" min="2024-01-01" max="2028-01-01" required><br>
+
         <input type="submit" id="submit" value="Submit Route">
       </form>
 
@@ -33,15 +40,17 @@
 
     <div id="pastSearchesContainer">Current Routes
         <ul id="pastSearchesList"></ul>
+        <form id="allRoutes">
+          <input type="submit" id="get_all_routes" value="View Active Routes">
+        </form>
+        
     </div>
     <div id="popup" style="display: none;"></div>
 
     <div id="viewDiv"></div>
-
+    
     <script>
       require([
-        // "dojo/dom",
-        // "dojo/domReady!",
         "esri/config",
         "esri/Map",
         "esri/views/MapView",
@@ -53,24 +62,15 @@
         "esri/rest/support/FeatureSet",
         "esri/rest/locator",
         "esri/layers/FeatureLayer",
-        "esri/widgets/Legend"
-        // "esri/layers/OpenWeatherMapLayer"
-        // "esri/layers/ArcGISDynamicMapServiceLayer",
-        // "esri/urlUtils",
-        // "dojo/dom", 
-        // "dojo/on", 
-        // "dojo/_base/array", 
-        // "dojo/domReady!"
+        "esri/widgets/Legend",
+        "esri/core/units",
+        "esri/layers/MapImageLayer",
 
   
       ], function(esriConfig, Map, MapView, 
                   Graphic, GraphicsLayer, route, 
-                  RouteParameters, FeatureSet, locator,FeatureLayer,Legend) {
+                  RouteParameters, FeatureSet, locator,FeatureLayer,Legend, Units, MapImageLayer) {
 
-      // urlUtils.addProxyRule({
-      //   urlPrefix: "traffic.arcgis.com", 
-      //   proxyUrl: "http://webserver/proxy/proxy.ashx"
-      // });
   
       esriConfig.apiKey = "AAPK7d9198b324c34382b89c6e1485af7a6feZL-WzCqfZjOlsuoTNJ7kCBMlRAaoAnOCgA0I33as1UJjUfgPNOkmdKCmIvwxNrg";
   
@@ -84,26 +84,26 @@
       const view = new MapView({
         container: "viewDiv",
         map: map,
-        center: [-81,41], //Longitude, latitude
-        zoom: 5
+        center: [-92,40], //Longitude, latitude
+        zoom: 3,
+        constraints: {
+          minZoom: 2
+        },
       });
 
       var featureLayerUrl = "https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/NWS_Watches_Warnings_v1/FeatureServer/9";
 
       var featureLayerUrl2 = "https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/NWS_Watches_Warnings_v1/FeatureServer/8";
       
-      //const popupOpenspaces = {
-      //  "title": "Severe Weather",
-      //}
+      const popupOpenspaces = {
+        "title": "Severe Weather",
+      }
 
-      //const popupOpenspaces2 = {
-      //  "title": "Extreme Weather",
-      // }
 
       // Create the feature layer
       var featureLayer = new FeatureLayer({
         url: featureLayerUrl,
-        //popupTemplate: popupOpenspaces
+        popupTemplate: popupOpenspaces
       });
 
       var featureLayer2 = new FeatureLayer({
@@ -111,27 +111,99 @@
         //popupTemplate: popupOpenspaces2
       });
 
+      let trafficLayer = new MapImageLayer({
+        url: "https://traffic.arcgis.com/arcgis/rest/services/World/Traffic/MapServer",
+        dpi: 48,
+        imageFormat: "png32",
+        refreshInterval: 3, 
+        useViewTime: false,
+        visible: true 
+      });
+
       // Set the opacity of the feature layer (adjust as needed)
-      featureLayer.opacity = 0.5; 
+      featureLayer.opacity = 0.8; 
 
       // Add the feature layer to the map
       map.add(featureLayer,9);
 
       // Add the feature layer to the map
-      map.add(featureLayer2,8);
+      //map.add(featureLayer2,8);
+
+      
+      map.add(trafficLayer);
+
+      var layersArray = [featureLayer,trafficLayer];
+
+      // Create an array of layerInfos for the Legend widget
+      var layerInfos = layersArray.map(function (layer) {
+        return {
+          layer: trafficLayer,
+          title: layer.title || "Custom Title" // You can set custom titles for the layers if needed
+          // Add more properties as needed
+        };
+      });
 
       var legend = new Legend({
-        view: view
+        view: view,
+        layerInfos: [
+          {
+            layer: featureLayer,
+            sublayerIds: []
+          }
+        ]
       });
 
       // Add the legend widget to the bottom-right corner of the view
       view.ui.add(legend, "bottom-left");
 
-      // var weatherLayer = new OpenWeatherMapLayer({apikey: "990beb6f0e3652c6b8343e37583774fc"});
-      // map.add(weatherLayer);
-
       const graphicsLayer = new GraphicsLayer();
       map.add(graphicsLayer);
+
+      setInterval(function () {
+        // Remove the feature layer from the map
+        map.removeMany([featureLayer, trafficLayer]);
+
+        // Create a new instance of the feature layer
+        featureLayer = new FeatureLayer({
+          url: featureLayerUrl,
+          popupTemplate: popupOpenspaces
+        });
+
+        trafficLayer = new MapImageLayer({
+          url: "https://traffic.arcgis.com/arcgis/rest/services/World/Traffic/MapServer",
+          dpi: 48,
+          imageFormat: "png32",
+          refreshInterval: 3, 
+          useViewTime: false,
+          visible: true 
+        });
+
+        // Add the new instance of the feature layer to the map
+        map.add(featureLayer, 9);
+        map.add(trafficLayer);
+
+        legend.layerInfos = [
+          {
+            layer: featureLayer,
+            sublayerIds: []
+          }
+        ];
+      }, 300000);
+
+      const polygonBarriers = [{
+        geometry: {
+          rings: [
+            [-80, 40], //Longitude, latitude
+            [-80, 42], //Longitude, latitude
+            [-82, 42],   //Longitude, latitude
+            [-82, 40], //Longitude, latitude
+          ]
+        },
+        attributes: {
+          Name: "Flood zone",
+          BarrierType: 0 // Restriction barrier type
+        }
+      }]
 
       const polygon = {
         type: "polygon",
@@ -153,9 +225,18 @@
       };
 
       const polygonGraphic = new Graphic({
-          geometry: polygon,
-          symbol: simpleFillSymbol,
-          attributes: {"BarrierType": 0}
+          // geometry: {
+            rings: [
+              [-80, 40], //Longitude, latitude
+              [-80, 42], //Longitude, latitude
+              [-82, 42],   //Longitude, latitude
+              [-82, 40], //Longitude, latitude
+            ]
+          // },
+          // symbol: simpleFillSymbol,
+          // attributes: {
+            // Name: "Storm",
+            // BarrierType: 0}
       });
   
       graphicsLayer.add(polygonGraphic);
@@ -188,7 +269,6 @@
       }
 
     function displayPastResults() {
-      console.log("--------------DISPLAY RESULTS--------------")
       let pastResults = JSON.parse(localStorage.getItem('formData')) || [];
       let pastResultsList = document.getElementById('pastSearchesList');
 
@@ -204,6 +284,7 @@
         appendField(li, 'Source', result.source);
         appendField(li, 'Destination', result.dest);
         appendField(li, 'Deadline', result.deadline);
+        appendField(li, 'Freight', result.freight);
 
         // Add click event to trigger getRoute function
         li.addEventListener('click', function() {
@@ -250,9 +331,6 @@
         const source_params = {address: {"address": source_address}}
         const dest_params = {address: {"address": destination_address}}
   
-        // prevQueries.push([source_address, destination_address]);
-        // updatePastSearches(prevQueries);
-  
         Promise.all([
           locator.addressToLocations(geocodingServiceUrl, source_params),
           locator.addressToLocations(geocodingServiceUrl, dest_params),
@@ -270,38 +348,44 @@
               resultsArray[1][0].location,
               coordIdx);
             coords.push([resultsArray[0][0].location, resultsArray[1][0].location])
-            console.log(coords)
             displayPastResults();
   
             getRoute();
           })
       });
-  
-      function getRoute() {
-        const routeParams = new RouteParameters({
-          stops: new FeatureSet({
-            features: view.graphics.toArray()
-          }),
-          polygon_barriers: {
-            spatialReference: {
-              wkid: 4326,
-            },
-            features: [polygonGraphic]
-          }
-        });
 
-        route.solve(routeUrl, routeParams)
-          .then(function(data) {
-            data.routeResults.forEach(function(result) {
-              result.route.symbol = {
-                type: "simple-line",
-                color: [5, 150, 255],
-                width: 3
-              };
-              view.graphics.add(result.route);
+        function getRoute() {
+          const routeParams = new RouteParameters({
+            stops: new FeatureSet({
+              features: view.graphics.toArray()
+            }),
+            returnDirections: true,
+            outSpatialReference: {
+              wkid: 102100
+            },
+            impedanceAttributeName: "TruckTravelTime",
+            restrictionAttributeNames:[ "Avoid Truck Restricted Roads", "Driving a Truck", "Use Preferred Truck Routes"],
+            polygon_barriers: {
+              features: [polygonGraphic]
+            }
+          });
+
+          route.solve(routeUrl, routeParams)
+            .then(function (data) {
+              data.routeResults.forEach(function (result) {
+                result.route.symbol = {
+                  type: "simple-line",
+                  color: [5, 150, 255],
+                  width: 3
+                };
+                view.graphics.add(result.route);
+              });
+            })
+            .catch(function (error) {
+              console.error("Error solving route:", error);
             });
-          })
         }
+       
       });
   
       // Autocomplete for source address
