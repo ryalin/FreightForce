@@ -14,7 +14,7 @@
   </style>
   <link rel="stylesheet" href="static/styles.css">
   <link rel="stylesheet" href="https://js.arcgis.com/4.28/esri/themes/light/main.css">
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCvM0RWQaayF8fSgrMZj7_dwIETbHQh2dc&libraries=places"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key={{MAPS_API_KEY}}&libraries=places"></script>
   <script src="https://js.arcgis.com/4.28/"></script>
   
   </head>
@@ -70,7 +70,7 @@
                   RouteParameters, FeatureSet, locator, FeatureLayer,Legend, Units, MapImageLayer) {
 
   
-      esriConfig.apiKey = "AAPK7d9198b324c34382b89c6e1485af7a6feZL-WzCqfZjOlsuoTNJ7kCBMlRAaoAnOCgA0I33as1UJjUfgPNOkmdKCmIvwxNrg";
+      esriConfig.apiKey = "{{Esri_Config Key}}";
   
       const map = new Map({
         basemap: "arcgis/navigation" // basemap styles service
@@ -86,8 +86,8 @@
         },
       });
 
-      var featureLayerUrl = "https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/NWS_Watches_Warnings_v1/FeatureServer/9";
-      var featureLayerUrl2 = "https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/NWS_Watches_Warnings_v1/FeatureServer/8";
+      var featureLayerUrl = "https://services9.arcgis.com/{{feature layer key}}/arcgis/rest/services/NWS_Watches_Warnings_v1/FeatureServer/9";
+      var featureLayerUrl2 = "https://services9.arcgis.com/{{feature layer key/arcgis/rest/services/NWS_Watches_Warnings_v1/FeatureServer/8";
       
       const popupOpenspaces = {
         "title": "Severe Weather",
